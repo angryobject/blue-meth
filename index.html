@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Blue Meth | Breaking Bad</title>
+		<meta name="description" content="A Breaking Bad Tribute using WebGL and Three.js">
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			html, body {
+				width: 100%;
+				height: 100%;
+			}
+
+			body {
+				background-color: #ffffff;
+				margin: 0;
+				overflow: hidden;
+				font-family: arial;
+			}
+
+			#instructions {
+				position: absolute;
+				bottom: 10px;
+				left: 10px;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="three.min.js"></script>
+		<script src="SpectratorControls.js"></script>
+
+		<div id="instructions">
+			W, A, S, D = Move, SPACE = Up, SHIFT = Down, MOUSE = Look around
+		</div>
+
+		<script type="text/template" id="text">
+			*******************************
+			*******************************
+			***@@@@***@******@***@**@@@@@**
+			***@@@@@**@******@***@**@******
+			***@@*****@******@***@**@@@@@**
+			***@@@@@**@******@***@**@******
+			***@@@@***@@@@@**@@@@@**@@@@@**
+			*******************************
+			*******************************
+			***@***@**@@@@@**@@@@@**@***@**
+			***@@*@@**@********@****@***@**
+			***@@@@@**@@@@@****@****@@@@@**
+			***@*@*@**@********@****@***@**
+			***@***@**@@@@@****@****@***@**
+			*******************************
+			*******************************
+		</script>
+
+		<script type="text/template" id="heisenberg">
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@*****************@@@@@@@
+			@@@@@@@*****************@@@@@@@
+			@@@@@@@*****************@@@@@@@
+			@@@@@@*******************@@@@@@
+			@*****************************@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@******@@@******@@@@@@@@
+			@@@@@@@@***************@@@@@@@@
+			@@@@@@@@******@@@******@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		</script>
+
+		<script>
+			var pointerLockElem = document.body;
+			var pointerLockSupported = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+
+			if ( ! pointerLockSupported ) {
+
+				document.getElementById('instructions').innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
+				pointerLockElem.requestPointerLock = function () {};
+
+			} else {
+
+				pointerLockElem.requestPointerLock = pointerLockElem.requestPointerLock || pointerLockElem.mozRequestPointerLock || pointerLockElem.webkitRequestPointerLock;
+
+			}
+
+
+
+			var renderer, scene, camera, controls;
+
+			init();
+			animate();
+
+			function init() {
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setClearColor( 0xfbfbfb )
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				document.body.appendChild( renderer.domElement );
+
+				scene = new THREE.Scene();
+
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.z = 2500;
+
+				controls = new THREE.SpectratorControls( camera , { moveSpeed: 50, lookSpeed: 1 } );
+				scene.add( controls.getObject() );
+
+				createObjects();
+				addEventListeners();
+
+			}
+
+			function createObjects() {
+				var geometry = new THREE.Geometry();
+				var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } )
+
+				var pieceSize = 50;
+
+				var text = createGeometryFromTemplate( document.getElementById( 'text' ).innerText, pieceSize );
+
+				THREE.GeometryUtils.merge( geometry, text.geometry );
+
+				var mesh = new THREE.Mesh( new THREE.CubeGeometry( pieceSize, pieceSize, pieceSize ) );
+
+				var numOfBlocks = 10;
+				var numOfPieces = 500;
+
+				var x, y, z;
+
+				for ( var j = 0; j < numOfBlocks; j ++ ) {
+
+					x = 0;
+					y = 0;
+					z = 0;
+
+					for ( var i = 0; i < numOfPieces; i ++ ) {
+
+						mesh.position.set(
+							-x - pieceSize * 4,
+							Math.cos( y ) * 2 * pieceSize - text.height / 2,
+							Math.sin( y ) * 2 * pieceSize - pieceSize * 3 * j
+						);
+
+						THREE.GeometryUtils.merge( geometry, mesh );
+
+						mesh.position.set(
+							x + text.width + pieceSize * 4,
+							Math.cos( y ) * 2 * pieceSize - text.height / 2,
+							Math.sin( y ) * 2 * pieceSize - pieceSize * 3 * j
+						);
+
+						THREE.GeometryUtils.merge( geometry, mesh );
+
+						x += pieceSize / 10;
+						y += Math.PI / 10;
+						z += Math.PI / 10;
+
+					}
+
+				}
+
+				for ( var i = 0, l = geometry.faces.length; i < l; i ++ ) {
+
+					var face = geometry.faces[ i ];
+
+					// hsl(200, 61.7%, 63.1%)
+					face.vertexColors[ 0 ] = new THREE.Color().setHSL( 200 / 360, 0.617, Math.random() * 0.25 + 0.631 );
+					face.vertexColors[ 1 ] = new THREE.Color().setHSL( 200 / 360, 0.617, Math.random() * 0.25 + 0.631 );
+					face.vertexColors[ 2 ] = new THREE.Color().setHSL( 200 / 360, 0.617, Math.random() * 0.25 + 0.631 );
+				}
+
+				var heisenberg = createGeometryFromTemplate( document.getElementById( 'heisenberg' ).innerText, pieceSize );
+
+				mesh = new THREE.Mesh( heisenberg.geometry );
+				mesh.position.set( 0, - text.height, 0 )
+
+				i = geometry.faces.length + 1;
+
+				THREE.GeometryUtils.merge( geometry, mesh );
+
+				for ( l = geometry.faces.length; i < l; i ++ ) {
+
+					var face = geometry.faces[ i ];
+
+					face.vertexColors[ 0 ] = new THREE.Color().setHSL( 0, 0, 0 );
+					face.vertexColors[ 1 ] = new THREE.Color().setHSL( 0, 0, 0 );
+					face.vertexColors[ 2 ] = new THREE.Color().setHSL( 0, 0, 0 );
+				}
+
+				mesh = new THREE.Mesh( geometry, material );
+				mesh.position.set( - text.width / 2, text.height / 2, 0 );
+
+				scene.add( mesh );
+
+			}
+
+			function createGeometryFromTemplate(tmpl, pieceSize) {
+				var geometry = new THREE.Geometry();
+				var mesh = new THREE.Mesh( new THREE.CubeGeometry( pieceSize, pieceSize, pieceSize ) );
+
+				var x = 0, y = 0, z = 0;
+
+				var width = 0;
+				var height = 0;
+
+				for ( var i = 0, l = tmpl.length; i < l; i ++ ) {
+
+					if ( tmpl.charAt(i) === '*' || tmpl.charAt(i) === '@' ) {
+
+						mesh.position.set( x, y, z );
+
+						x += pieceSize;
+
+						if ( tmpl.charAt(i) != '@' ) {
+							THREE.GeometryUtils.merge( geometry, mesh );
+						}
+
+					}
+
+					if ( tmpl.charAt(i) === '\n' ) {
+
+						y -= pieceSize;
+
+						width = width < x ? x : width;
+						height = -1 * y;
+
+						x = 0;
+
+					}
+
+				}
+
+				return {
+					geometry: geometry,
+					width: width,
+					height: height
+				};
+			}
+
+			function addEventListeners() {
+
+				window.addEventListener( 'resize', onWidnowResize );
+
+				document.addEventListener( 'pointerlockchange', onPointerLockChange, false );
+				document.addEventListener( 'mozpointerlockchange', onPointerLockChange, false );
+				document.addEventListener( 'webkitpointerlockchange', onPointerLockChange, false );
+
+				document.addEventListener( 'pointerlockerror', onPointerLockError, false );
+				document.addEventListener( 'mozpointerlockerror', onPointerLockError, false );
+				document.addEventListener( 'webkitpointerlockerror', onPointerLockError, false );
+
+				pointerLockElem.addEventListener( 'click', requestPointerLock, false);
+			}
+
+			function onWidnowResize() {
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+			}
+
+			function onPointerLockChange() {
+				var elem = document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement;
+
+				if ( elem === pointerLockElem ) {
+
+					controls.enabled = true;
+
+				} else {
+
+					controls.enabled = false;
+
+				}
+			}
+
+			function onPointerLockError(e) {
+
+				controls.enabled = false;
+
+			}
+
+			function requestPointerLock() {
+
+				if ( ! controls.enabled ) {
+
+					pointerLockElem.requestPointerLock();
+
+				}
+
+			}
+
+			function animate() {
+
+				controls.update();
+				renderer.render( scene, camera );
+
+				requestAnimationFrame( animate );
+
+			}
+
+		</script>
+	</body>
+</html>
