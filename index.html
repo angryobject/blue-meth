@@ -127,7 +127,7 @@
 
 				var pieceSize = 50;
 
-				var text = createGeometryFromTemplate( document.getElementById( 'text' ).innerText, pieceSize );
+				var text = createGeometryFromTemplate( document.getElementById( 'text' ).innerHTML, pieceSize );
 
 				THREE.GeometryUtils.merge( geometry, text.geometry );
 
@@ -180,7 +180,7 @@
 					face.vertexColors[ 2 ] = new THREE.Color().setHSL( 200 / 360, 0.617, Math.random() * 0.25 + 0.631 );
 				}
 
-				var heisenberg = createGeometryFromTemplate( document.getElementById( 'heisenberg' ).innerText, pieceSize );
+				var heisenberg = createGeometryFromTemplate( document.getElementById( 'heisenberg' ).innerHTML, pieceSize );
 
 				mesh = new THREE.Mesh( heisenberg.geometry );
 				mesh.position.set( 0, - text.height, 0 )
